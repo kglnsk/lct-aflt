@@ -78,6 +78,12 @@ body {
     align-items: center;
 }
 
+.auth-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
 .layout {
     flex: 1;
     display: grid;
@@ -88,6 +94,16 @@ body {
 
 .layout--single {
     grid-template-columns: minmax(0, 1fr);
+}
+
+.layout--wizard {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px clamp(12px, 4vw, 40px);
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .page--narrow {
@@ -115,6 +131,140 @@ body {
 .card__hint {
     margin: 0 0 20px;
     color: var(--text-muted);
+}
+
+.stepper {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    flex-wrap: wrap;
+}
+
+.stepper__item {
+    flex: 1 1 160px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(244, 246, 251, 0.6);
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.stepper__label {
+    display: block;
+    font-size: 0.95rem;
+}
+
+.stepper__item--current {
+    border-color: rgba(0, 76, 151, 0.35);
+    background: rgba(0, 76, 151, 0.12);
+    color: var(--accent);
+}
+
+.stepper__item--done {
+    background: rgba(27, 156, 85, 0.12);
+    border-color: rgba(27, 156, 85, 0.35);
+    color: var(--success);
+}
+
+.stepper__number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.step__header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.step-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.session-pill {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(0, 76, 151, 0.08);
+    border: 1px solid rgba(0, 76, 151, 0.15);
+}
+
+.session-pill--tools {
+    background: rgba(82, 96, 109, 0.08);
+    border-color: rgba(82, 96, 109, 0.2);
+}
+
+.session-pill__label {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.session-pill__id {
+    font-family: 'JetBrains Mono', 'Fira Mono', Menlo, monospace;
+    font-size: 0.9rem;
+}
+
+.session-pill__info {
+    font-weight: 500;
+    color: var(--text);
+    word-break: break-word;
+}
+
+.session-pill--tools .session-pill__info {
+    flex: 1 1 100%;
+}
+
+.form-feedback {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+}
+
+.form-feedback--info {
+    background: rgba(0, 76, 151, 0.08);
+    border-color: rgba(0, 76, 151, 0.2);
+    color: var(--accent);
+}
+
+.form-feedback--error {
+    background: rgba(198, 40, 40, 0.12);
+    border-color: rgba(198, 40, 40, 0.4);
+    color: var(--danger);
+}
+
+.form-feedback--success {
+    background: rgba(27, 156, 85, 0.12);
+    border-color: rgba(27, 156, 85, 0.4);
+    color: var(--success);
 }
 
 .form-group {
@@ -352,6 +502,94 @@ body {
     align-items: center;
 }
 
+.metrics-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    margin-bottom: 16px;
+}
+
+.metric-card {
+    background: rgba(31, 41, 51, 0.06);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.metric-value {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.metric-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.mode-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.mode-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(0, 76, 151, 0.12);
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.mode-chip__label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.mode-chip__value {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.latest-sessions {
+    margin-bottom: 16px;
+}
+
+.latest-sessions h3 {
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+}
+
+.latest-sessions__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.latest-sessions__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(31, 41, 51, 0.05);
+}
+
+.latest-sessions__owner {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
 .badge {
     display: inline-flex;
     align-items: center;
@@ -408,6 +646,60 @@ body {
     word-break: break-all;
 }
 
+.divider {
+    margin: 32px 0 24px;
+    border: none;
+    border-top: 1px solid var(--border);
+}
+
+.users-panel__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.users-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.users-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    gap: 24px;
+    align-items: start;
+}
+
+.users-list {
+    overflow-x: auto;
+}
+
+.users-form h4 {
+    margin: 0 0 12px;
+}
+
+.users-form select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 1rem;
+}
+
+.badge--admin {
+    background: rgba(0, 76, 151, 0.18);
+    color: var(--accent);
+    text-transform: uppercase;
+}
+
+.badge--muted {
+    background: rgba(82, 96, 109, 0.12);
+    color: var(--text-muted);
+}
+
 @media (max-width: 768px) {
     .layout {
         grid-template-columns: 1fr;
@@ -417,5 +709,22 @@ body {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
+    }
+
+    .layout--wizard {
+        padding: 16px;
+    }
+
+    .stepper {
+        flex-direction: column;
+    }
+
+    .stepper__item {
+        flex: 1 1 auto;
+    }
+
+    .step-actions {
+        flex-direction: column;
+        align-items: stretch;
     }
 }

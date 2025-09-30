@@ -55,12 +55,41 @@
                 </div>
             </div>
             <div class="notice" id="dashboard-status" hidden></div>
+            <div class="notice" id="metrics-status" hidden></div>
+            <div class="metrics-grid" id="metrics-grid" hidden>
+                <div class="metric-card">
+                    <span class="metric-label">Всего сессий</span>
+                    <span class="metric-value" id="metric-total-sessions">0</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Активные</span>
+                    <span class="metric-value" id="metric-pending-sessions">0</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Завершено</span>
+                    <span class="metric-value" id="metric-completed-sessions">0</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Инженеры</span>
+                    <span class="metric-value" id="metric-total-engineers">0</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Анализы</span>
+                    <span class="metric-value" id="metric-total-analyses">0</span>
+                </div>
+            </div>
+            <div class="mode-breakdown" id="mode-breakdown" hidden></div>
+            <section class="latest-sessions" id="latest-sessions" hidden>
+                <h3>Последние сессии</h3>
+                <ul class="latest-sessions__list" id="latest-sessions-list"></ul>
+            </section>
             <div class="empty-placeholder" id="sessions-empty" hidden>Сессии ещё не создавались. После запуска сверки список появится автоматически.</div>
             <div class="table-wrapper" id="sessions-wrapper" hidden>
                 <table class="table" id="sessions-table">
                     <thead>
                         <tr>
                             <th>ID сессии</th>
+                            <th>Инженер</th>
                             <th>Создана</th>
                             <th>Режим</th>
                             <th>Статус</th>
@@ -72,6 +101,56 @@
                     <tbody></tbody>
                 </table>
             </div>
+
+            <hr class="divider" id="users-divider" hidden>
+
+            <section class="users-panel" id="users-panel" hidden>
+                <div class="users-panel__header">
+                    <div>
+                        <h3>Учетные записи инженеров</h3>
+                        <p class="card__hint">Администратор может создать новую учётную запись или проверить текущие роли.</p>
+                    </div>
+                    <button type="button" class="button button--ghost" id="reload-users" title="Обновить список">Обновить список</button>
+                </div>
+                <div class="users-grid">
+                    <div class="users-list" id="users-list">
+                        <div class="empty-placeholder" id="users-empty" hidden>Пользователи не найдены.</div>
+                        <table class="table" id="users-table" hidden>
+                            <thead>
+                                <tr>
+                                    <th>Логин</th>
+                                    <th>Роль</th>
+                                    <th>Создан</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="users-form">
+                        <h4>Создать нового пользователя</h4>
+                        <form id="create-user-form" autocomplete="off">
+                            <div class="form-group">
+                                <label for="user-username">Логин</label>
+                                <input type="text" id="user-username" name="username" minlength="3" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="user-password">Пароль</label>
+                                <input type="password" id="user-password" name="password" minlength="6" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="user-role">Роль</label>
+                                <select id="user-role" name="role">
+                                    <option value="engineer" selected>Инженер</option>
+                                    <option value="admin">Администратор</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="button" id="create-user-submit">Добавить</button>
+                            <div class="notice notice--error" id="user-form-error" hidden></div>
+                            <div class="notice notice--success" id="user-form-success" hidden>Пользователь создан</div>
+                        </form>
+                    </div>
+                </div>
+            </section>
         </section>
     </main>
 

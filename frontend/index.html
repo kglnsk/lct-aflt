@@ -20,15 +20,52 @@
             </div>
         </div>
         <div class="header-actions">
-            <div class="status" id="system-status">Готов к работе</div>
+            <div class="status" id="system-status">Необходимо войти</div>
+            <div class="auth-controls">
+                <span class="badge" id="current-user" hidden></span>
+                <button type="button" class="button button--ghost" id="logout-btn" hidden>Выйти</button>
+            </div>
             <a class="link-button" href="/admin">Админ-панель</a>
         </div>
     </header>
 
-    <main class="layout">
-        <section class="card card--accent" id="session-config">
-            <h2>1. Настройка сессии</h2>
-            <p class="card__hint">Выберите режим работы и набор инструментов, который ожидается в кадре.</p>
+    <main class="layout layout--wizard">
+        <section class="card" id="login-panel">
+            <h2>Авторизация инженера</h2>
+            <p class="card__hint">Авторизуйтесь, чтобы запускать сессии сверки инструментов.</p>
+            <form id="login-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="login-username">Логин</label>
+                    <input type="text" id="login-username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Пароль</label>
+                    <input type="password" id="login-password" name="password" required>
+                </div>
+                <button type="submit" class="button" id="login-submit">Войти</button>
+            </form>
+            <div class="notice notice--error" id="login-error" hidden></div>
+        </section>
+
+        <div id="wizard-container" hidden>
+        <ol class="stepper" id="wizard-stepper">
+            <li class="stepper__item stepper__item--current" data-step-index="1">
+                <span class="stepper__number">1</span>
+                <span class="stepper__label">Настройка</span>
+            </li>
+            <li class="stepper__item" data-step-index="2">
+                <span class="stepper__number">2</span>
+                <span class="stepper__label">Загрузка</span>
+            </li>
+            <li class="stepper__item" data-step-index="3">
+                <span class="stepper__number">3</span>
+                <span class="stepper__label">Результаты</span>
+            </li>
+        </ol>
+
+        <section class="card card--accent step" data-step="1">
+            <h2>Выбор ожидаемых инструментов</h2>
+            <p class="card__hint">Сформируйте сессию сверки: выберите режим операции, порог совпадения и перечень инструментов, которые должны присутствовать.</p>
             <form id="session-form">
                 <div class="form-group">
                     <label for="mode">Режим</label>
@@ -40,41 +77,31 @@
                 <div class="form-group">
                     <label for="threshold">Минимальный порог совпадений: <span id="threshold-value">90%</span></label>
                     <input type="range" id="threshold" name="threshold" min="60" max="100" value="90">
-                    <small>Система сигнализирует о необходимости ручной проверки ниже этого значения.</small>
+                    <small>При показателе ниже порога система попросит провести ручную сверку.</small>
                 </div>
                 <div class="form-group">
                     <label>Ожидаемые инструменты</label>
                     <div class="tool-list" id="tool-list">Загрузка каталога...</div>
                 </div>
-                <button type="submit" class="button" id="create-session-btn">Создать сессию</button>
+                <button type="submit" class="button" id="create-session-btn">Сохранить настройки</button>
+                <p class="form-feedback" id="session-form-status" hidden></p>
             </form>
         </section>
 
-        <section class="card" id="session-info" hidden>
-            <h2>2. Текущая сессия</h2>
-            <dl class="info-grid">
-                <div>
-                    <dt>ID сессии</dt>
-                    <dd id="session-id">—</dd>
-                </div>
-                <div>
-                    <dt>Режим</dt>
-                    <dd id="session-mode">—</dd>
-                </div>
-                <div>
-                    <dt>Ожидается</dt>
-                    <dd id="session-expected">—</dd>
-                </div>
-                <div>
-                    <dt>Порог</dt>
-                    <dd id="session-threshold">—</dd>
-                </div>
-            </dl>
-        </section>
-
-        <section class="card" id="capture-area" hidden>
-            <h2>3. Захват изображения</h2>
-            <p class="card__hint">Загрузите фото рабочей поверхности. На следующем этапе появится расшифровка.</p>
+        <section class="card step" data-step="2" hidden>
+            <div class="step__header">
+                <h2>Загрузите фотографию рабочего места</h2>
+                <p class="card__hint">Файл можно перетащить или выбрать вручную. После загрузки запустится анализ.</p>
+            </div>
+            <div class="session-pill" id="session-summary" hidden>
+                <span class="session-pill__id" id="session-id">—</span>
+                <span class="session-pill__info" id="session-mode">—</span>
+                <span class="session-pill__info" id="session-threshold">—</span>
+            </div>
+            <div class="session-pill session-pill--tools" id="session-tools" hidden>
+                <span class="session-pill__label">Ожидается:</span>
+                <span class="session-pill__info" id="session-expected">—</span>
+            </div>
             <div class="dropzone" id="dropzone">
                 <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" hidden>
                 <p>Перетащите файл сюда или <button type="button" class="link-button" id="select-file">выберите на устройстве</button></p>
@@ -84,10 +111,25 @@
                 <img id="preview-img" alt="Загруженное изображение">
                 <button type="button" class="button button--ghost" id="reset-upload">Загрузить другое фото</button>
             </div>
+            <div class="step-actions">
+                <button type="button" class="button button--ghost" id="back-to-config">Вернуться к настройке</button>
+            </div>
         </section>
 
-        <section class="card" id="analysis-area" hidden>
-            <h2>4. Результаты распознавания</h2>
+        <section class="card step" data-step="3" hidden>
+            <div class="step__header">
+                <h2>Результаты распознавания</h2>
+                <p class="card__hint">Перечень найденных инструментов, совпадение с эталонным списком и возможные отклонения.</p>
+            </div>
+            <div class="session-pill" id="session-summary-results" hidden>
+                <span class="session-pill__id" id="session-id-results">—</span>
+                <span class="session-pill__info" id="session-mode-results">—</span>
+                <span class="session-pill__info" id="session-threshold-results">—</span>
+            </div>
+            <div class="session-pill session-pill--tools" id="session-tools-results" hidden>
+                <span class="session-pill__label">Ожидается:</span>
+                <span class="session-pill__info" id="session-expected-results">—</span>
+            </div>
             <div id="analysis-summary" class="analysis-summary">Нет данных. Загрузите изображение.</div>
             <div class="result-grid" hidden id="analysis-content">
                 <div>
@@ -113,7 +155,12 @@
                     </div>
                 </div>
             </div>
+            <div class="step-actions">
+                <button type="button" class="button button--ghost" id="back-to-upload">Назад к загрузке</button>
+                <button type="button" class="button" id="start-new-session">Новая сессия</button>
+            </div>
         </section>
+        </div>
     </main>
 
     <footer class="page__footer">

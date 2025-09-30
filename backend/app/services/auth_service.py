@@ -14,6 +14,9 @@ from ..db.models import EngineerORM, EngineerTokenORM
 from ..db.session import get_db, session_scope
 
 
+VALID_ROLES = {"admin", "engineer"}
+
+
 def _hash_password(raw_password: str) -> str:
     return hashlib.sha256(raw_password.encode("utf-8")).hexdigest()
 
@@ -21,6 +24,10 @@ def _hash_password(raw_password: str) -> str:
 class AuthService:
     def __init__(self, db: Session) -> None:
         self._db = db
+
+    def list_engineers(self) -> list[EngineerORM]:
+        stmt = select(EngineerORM).order_by(EngineerORM.username)
+        return list(self._db.scalars(stmt))
 
     def ensure_admin(self, username: str, password: str) -> EngineerORM:
         hashed = _hash_password(password)
@@ -41,6 +48,26 @@ class AuthService:
             username=username,
             password_hash=hashed,
             role="admin",
+        )
+        self._db.add(engineer)
+        self._db.commit()
+        self._db.refresh(engineer)
+        return engineer
+
+    def create_engineer(self, username: str, password: str, role: str = "engineer") -> EngineerORM:
+        normalized_role = role.strip().lower()
+        if normalized_role not in VALID_ROLES:
+            raise ValueError(f"Unknown role '{role}'")
+
+        stmt = select(EngineerORM).where(EngineerORM.username == username)
+        existing = self._db.scalars(stmt).first()
+        if existing is not None:
+            raise ValueError("Engineer with this username already exists")
+
+        engineer = EngineerORM(
+            username=username,
+            password_hash=_hash_password(password),
+            role=normalized_role,
         )
         self._db.add(engineer)
         self._db.commit()

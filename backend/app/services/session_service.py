@@ -11,10 +11,11 @@ from sqlalchemy.orm import Session as OrmSession, selectinload
 
 from ..core.config import get_config
 from ..core.tool_catalog import TOOL_LOOKUP, get_default_tool_ids
-from ..db.models import AnalysisORM, SessionORM
+from ..db.models import AnalysisORM, EngineerORM, SessionORM
 from ..models.session import (
     AnalysisSnapshot,
     DetectionItem,
+    SessionEngineer,
     SessionMode,
     SessionRecord,
     SessionStatus,
@@ -35,6 +36,7 @@ class SessionService:
     def create_session(
         self,
         mode: SessionMode,
+        engineer: EngineerORM,
         expected_tool_ids: Optional[List[str]] = None,
         threshold: float = 0.9,
     ) -> SessionRecord:
@@ -49,6 +51,7 @@ class SessionService:
             expected_tool_ids=validated_tools,
             threshold=threshold,
             status=SessionStatus.PENDING.value,
+            engineer_id=engineer.id,
         )
         self._db.add(session)
         self._db.commit()
@@ -58,7 +61,10 @@ class SessionService:
     def list_sessions(self) -> List[SessionRecord]:
         stmt = (
             select(SessionORM)
-            .options(selectinload(SessionORM.analyses))
+            .options(
+                selectinload(SessionORM.analyses),
+                selectinload(SessionORM.engineer),
+            )
             .order_by(SessionORM.created_at.desc())
         )
         sessions = self._db.scalars(stmt).all()
@@ -67,7 +73,10 @@ class SessionService:
     def get_session(self, session_id: str) -> SessionRecord:
         stmt = (
             select(SessionORM)
-            .options(selectinload(SessionORM.analyses))
+            .options(
+                selectinload(SessionORM.analyses),
+                selectinload(SessionORM.engineer),
+            )
             .where(SessionORM.session_id == session_id)
         )
         session = self._db.scalars(stmt).first()
@@ -148,6 +157,13 @@ class SessionService:
         return target_path
 
     def _to_record(self, session_row: SessionORM) -> SessionRecord:
+        engineer_info = None
+        if session_row.engineer:
+            engineer_info = SessionEngineer(
+                id=session_row.engineer.id,
+                username=session_row.engineer.username,
+            )
+
         record = SessionRecord(
             session_id=session_row.session_id,
             mode=SessionMode(session_row.mode),
@@ -155,6 +171,7 @@ class SessionService:
             threshold=session_row.threshold,
             created_at=session_row.created_at,
             status=SessionStatus(session_row.status),
+            engineer=engineer_info,
         )
         analyses = sorted(session_row.analyses or [], key=lambda item: item.created_at)
         for analysis in analyses:

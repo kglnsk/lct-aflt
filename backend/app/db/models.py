@@ -18,6 +18,11 @@ class SessionORM(Base):
     threshold: Mapped[float] = mapped_column(Float, nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    engineer_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("engineers.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     analyses: Mapped[List["AnalysisORM"]] = relationship(
         back_populates="session",
@@ -25,6 +30,7 @@ class SessionORM(Base):
         order_by="AnalysisORM.created_at",
         lazy="joined",
     )
+    engineer: Mapped[Optional["EngineerORM"]] = relationship(lazy="joined")
 
 
 class AnalysisORM(Base):
@@ -70,4 +76,3 @@ class EngineerTokenORM(Base):
     engineer_id: Mapped[int] = mapped_column(Integer, ForeignKey("engineers.id", ondelete="CASCADE"))
 
     engineer: Mapped[EngineerORM] = relationship(back_populates="tokens")
-

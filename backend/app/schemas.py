@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field, validator
 
 from .core.tool_catalog import DEFAULT_TOOLS, TOOL_LOOKUP
 from .models.session import SessionMode, SessionRecord, SessionStatus
+from .services.dashboard_service import DashboardMetrics
+from .db.models import EngineerORM
 
 
 class ToolSchema(BaseModel):
@@ -47,9 +49,41 @@ class SessionSchema(BaseModel):
     created_at: datetime
     status: SessionStatus
     analyses: List[AnalysisSnapshotSchema] = Field(default_factory=list)
+    engineer: Optional["SessionEngineerSchema"] = None
 
     class Config:
         orm_mode = True
+
+
+class SessionEngineerSchema(BaseModel):
+    id: int
+    username: str
+
+    class Config:
+        orm_mode = True
+
+
+class DashboardModeStat(BaseModel):
+    mode: SessionMode
+    count: int
+
+
+class DashboardSessionSummarySchema(BaseModel):
+    session_id: str
+    created_at: datetime
+    status: SessionStatus
+    engineer_id: Optional[int] = None
+    engineer_username: Optional[str] = None
+
+
+class DashboardMetricsResponse(BaseModel):
+    total_sessions: int
+    pending_sessions: int
+    completed_sessions: int
+    total_engineers: int
+    total_analyses: int
+    sessions_by_mode: List[DashboardModeStat]
+    latest_sessions: List[DashboardSessionSummarySchema]
 
 
 class SessionCreateRequest(BaseModel):
@@ -69,6 +103,7 @@ class SessionCreateResponse(BaseModel):
     mode: SessionMode
     expected_tool_ids: List[str]
     threshold: float
+    engineer_id: Optional[int] = None
 
 
 class AnalysisResponse(BaseModel):
@@ -102,6 +137,29 @@ class SessionListResponse(BaseModel):
     sessions: List[SessionSchema]
 
 
+class EngineerSummary(BaseModel):
+    username: str
+    role: str
+    created_at: datetime
+
+
+class EngineerListResponse(BaseModel):
+    engineers: List[EngineerSummary]
+
+
+class EngineerCreateRequest(BaseModel):
+    username: str = Field(..., min_length=3)
+    password: str = Field(..., min_length=6)
+    role: str = Field(default="engineer")
+
+    @validator("role")
+    def validate_role(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized not in {"admin", "engineer"}:
+            raise ValueError("Role must be 'admin' or 'engineer'")
+        return normalized
+
+
 def serialize_tool_catalog() -> ToolCatalogResponse:
     return ToolCatalogResponse(
         tools=[
@@ -124,4 +182,35 @@ def serialize_analysis(session: SessionRecord, analysis) -> AnalysisResponse:
         session_id=session.session_id,
         session_status=session.status,
         analysis=AnalysisSnapshotSchema.from_orm(analysis),
+    )
+
+
+def serialize_engineer(engineer: EngineerORM) -> EngineerSummary:
+    return EngineerSummary(username=engineer.username, role=engineer.role, created_at=engineer.created_at)
+
+
+def serialize_engineers(engineers: List[EngineerORM]) -> EngineerListResponse:
+    return EngineerListResponse(engineers=[serialize_engineer(engineer) for engineer in engineers])
+
+
+def serialize_dashboard_metrics(metrics: DashboardMetrics) -> DashboardMetricsResponse:
+    return DashboardMetricsResponse(
+        total_sessions=metrics.total_sessions,
+        pending_sessions=metrics.pending_sessions,
+        completed_sessions=metrics.completed_sessions,
+        total_engineers=metrics.total_engineers,
+        total_analyses=metrics.total_analyses,
+        sessions_by_mode=[
+            DashboardModeStat(mode=item.mode, count=item.count) for item in metrics.sessions_by_mode
+        ],
+        latest_sessions=[
+            DashboardSessionSummarySchema(
+                session_id=session.session_id,
+                created_at=session.created_at,
+                status=session.status,
+                engineer_id=session.engineer_id,
+                engineer_username=session.engineer_username,
+            )
+            for session in metrics.latest_sessions
+        ],
     )

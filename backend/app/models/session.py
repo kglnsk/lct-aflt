@@ -17,6 +17,12 @@ class SessionStatus(str, Enum):
 
 
 @dataclass
+class SessionEngineer:
+    id: int
+    username: str
+
+
+@dataclass
 class DetectionItem:
     tool_id: Optional[str]
     label: str
@@ -45,6 +51,7 @@ class SessionRecord:
     created_at: datetime = field(default_factory=datetime.utcnow)
     status: SessionStatus = SessionStatus.PENDING
     analyses: List[AnalysisSnapshot] = field(default_factory=list)
+    engineer: Optional[SessionEngineer] = None
 
     def add_analysis(self, snapshot: AnalysisSnapshot) -> None:
         self.analyses.append(snapshot)

@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 
 from ..schemas import (
     AnalysisResponse,
+    DashboardMetricsResponse,
+    EngineerCreateRequest,
+    EngineerListResponse,
     EngineerProfileResponse,
     LoginRequest,
     SessionCreateRequest,
@@ -15,11 +18,15 @@ from ..schemas import (
     ToolCatalogResponse,
     TokenResponse,
     serialize_analysis,
+    serialize_engineer,
+    serialize_engineers,
     serialize_session,
     serialize_sessions,
+    serialize_dashboard_metrics,
     serialize_tool_catalog,
 )
 from ..services.session_service import SessionNotFoundError, SessionService
+from ..services.dashboard_service import DashboardService
 from ..services.detection_client import DetectionClient, get_detection_client
 from ..services.auth_service import (
     AuthService,
@@ -39,6 +46,12 @@ def get_session_service(
     detection_client: DetectionClient = Depends(get_detection_client),
 ) -> SessionService:
     return SessionService(db=db, detection_client=detection_client)
+
+
+def get_dashboard_service(
+    db: Session = Depends(get_db),
+) -> DashboardService:
+    return DashboardService(db=db)
 
 
 @router.get("/health", summary="Health check")
@@ -95,11 +108,13 @@ async def read_current_engineer(
 )
 async def create_session(
     request: SessionCreateRequest,
+    engineer: EngineerORM = Depends(get_current_engineer),
     service: SessionService = Depends(get_session_service),
 ) -> SessionCreateResponse:
     try:
         session = service.create_session(
             mode=request.mode,
+            engineer=engineer,
             expected_tool_ids=request.expected_tool_ids,
             threshold=request.threshold,
         )
@@ -110,6 +125,7 @@ async def create_session(
         mode=session.mode,
         expected_tool_ids=session.expected_tool_ids,
         threshold=session.threshold,
+        engineer_id=session.engineer.id if session.engineer else None,
     )
 
 
@@ -127,18 +143,60 @@ async def admin_list_sessions(
 
 
 @router.get(
+    "/admin/engineers",
+    response_model=EngineerListResponse,
+    summary="List all engineers (admin only)",
+)
+async def admin_list_engineers(
+    _: EngineerORM = Depends(require_admin),
+    auth_service: AuthService = Depends(get_auth_service),
+) -> EngineerListResponse:
+    engineers = auth_service.list_engineers()
+    return serialize_engineers(engineers)
+
+
+@router.post(
+    "/admin/engineers",
+    response_model=EngineerProfileResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new engineer account (admin only)",
+)
+async def admin_create_engineer(
+    payload: EngineerCreateRequest,
+    _: EngineerORM = Depends(require_admin),
+    auth_service: AuthService = Depends(get_auth_service),
+) -> EngineerProfileResponse:
+    try:
+        engineer = auth_service.create_engineer(
+            username=payload.username,
+            password=payload.password,
+            role=payload.role,
+        )
+    except ValueError as exc:
+        message = str(exc)
+        if "already exists" in message.lower():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=message) from exc
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message) from exc
+    summary = serialize_engineer(engineer)
+    return EngineerProfileResponse(username=summary.username, role=summary.role)
+
+
+@router.get(
     "/sessions/{session_id}",
     response_model=SessionSchema,
     summary="Get session details including past analyses",
 )
 async def get_session(
     session_id: str,
+    engineer: EngineerORM = Depends(get_current_engineer),
     service: SessionService = Depends(get_session_service),
 ) -> SessionSchema:
     try:
         session = service.get_session(session_id)
     except SessionNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if session.engineer and session.engineer.id != engineer.id and engineer.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough privileges")
     return serialize_session(session)
 
 
@@ -150,12 +208,15 @@ async def get_session(
 async def analyse_image(
     session_id: str,
     file: UploadFile = File(...),
+    engineer: EngineerORM = Depends(get_current_engineer),
     service: SessionService = Depends(get_session_service),
 ) -> AnalysisResponse:
     try:
         session = service.get_session(session_id)
     except SessionNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if session.engineer and session.engineer.id != engineer.id and engineer.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough privileges")
 
     allowed_media_types = {"image/jpeg", "image/png", "image/webp"}
     if not file.content_type or file.content_type not in allowed_media_types:
@@ -168,3 +229,16 @@ async def analyse_image(
         session_id=session.session_id, upload=file
     )
     return serialize_analysis(updated_session, analysis)
+
+
+@router.get(
+    "/admin/dashboard",
+    response_model=DashboardMetricsResponse,
+    summary="Aggregated metrics for the admin dashboard",
+)
+async def admin_dashboard(
+    _: EngineerORM = Depends(require_admin),
+    service: DashboardService = Depends(get_dashboard_service),
+) -> DashboardMetricsResponse:
+    metrics = service.collect_metrics()
+    return serialize_dashboard_metrics(metrics)
