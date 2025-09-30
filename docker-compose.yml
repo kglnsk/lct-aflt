@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  toolkit:
+    build: .
+    container_name: toolkit-vision
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:///data/app.db
+      UPLOAD_DIR: data/uploads
+      INITIAL_ADMIN_USERNAME: admin
+      INITIAL_ADMIN_PASSWORD: change-me
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

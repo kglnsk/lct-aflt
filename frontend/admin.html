@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToolKit Vision Admin</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="page page--narrow">
+    <header class="page__header">
+        <div class="brand">
+            <div class="brand__logo" aria-hidden="true">🛠️</div>
+            <div>
+                <h1>ToolKit Vision · Администрирование</h1>
+                <p class="brand__subtitle">История сессий и контроль доступа для инженеров</p>
+            </div>
+        </div>
+        <nav>
+            <a class="link-button" href="/">Рабочая консоль</a>
+        </nav>
+    </header>
+
+    <main class="layout layout--single">
+        <section class="card" id="login-panel">
+            <h2>Авторизация инженера</h2>
+            <p class="card__hint">Войдите с учётной записью инженера или администратора, чтобы просматривать историю сессий.</p>
+            <form id="login-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="login-username">Логин</label>
+                    <input type="text" id="login-username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Пароль</label>
+                    <input type="password" id="login-password" name="password" required>
+                </div>
+                <button type="submit" class="button" id="login-submit">Войти</button>
+            </form>
+            <div class="notice notice--error" id="login-error" hidden></div>
+        </section>
+
+        <section class="card" id="dashboard-panel" hidden>
+            <div class="dashboard-header">
+                <div>
+                    <h2>Сессии сверки инструментов</h2>
+                    <p class="card__hint">Здесь отображаются все созданные сессии. Для обновления данных используйте кнопку «Обновить».</p>
+                </div>
+                <div class="dashboard-actions">
+                    <span class="badge" id="current-user"></span>
+                    <button type="button" class="button button--ghost" id="logout-btn">Выйти</button>
+                    <button type="button" class="button" id="refresh-btn">Обновить</button>
+                </div>
+            </div>
+            <div class="notice" id="dashboard-status" hidden></div>
+            <div class="empty-placeholder" id="sessions-empty" hidden>Сессии ещё не создавались. После запуска сверки список появится автоматически.</div>
+            <div class="table-wrapper" id="sessions-wrapper" hidden>
+                <table class="table" id="sessions-table">
+                    <thead>
+                        <tr>
+                            <th>ID сессии</th>
+                            <th>Создана</th>
+                            <th>Режим</th>
+                            <th>Статус</th>
+                            <th>Последний анализ</th>
+                            <th>Совпадение</th>
+                            <th>Отсутствуют / посторонние</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="page__footer">
+        <p>ToolKit Vision · внутренний кабинет для инженеров. Данные хранятся в встроенной базе SQLite.</p>
+    </footer>
+</div>
+<script src="/static/admin.js" type="module"></script>
+</body>
+</html>

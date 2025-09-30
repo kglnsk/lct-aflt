@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToolKit Vision Console</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="page">
+    <header class="page__header">
+        <div class="brand">
+            <div class="brand__logo" aria-hidden="true">✈️</div>
+            <div>
+                <h1>ToolKit Vision</h1>
+                <p class="brand__subtitle">Прототип автоматизированного учета авиационных инструментов</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="status" id="system-status">Готов к работе</div>
+            <a class="link-button" href="/admin">Админ-панель</a>
+        </div>
+    </header>
+
+    <main class="layout">
+        <section class="card card--accent" id="session-config">
+            <h2>1. Настройка сессии</h2>
+            <p class="card__hint">Выберите режим работы и набор инструментов, который ожидается в кадре.</p>
+            <form id="session-form">
+                <div class="form-group">
+                    <label for="mode">Режим</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="mode" value="handout" checked> Выдача</label>
+                        <label><input type="radio" name="mode" value="handover"> Возврат</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="threshold">Минимальный порог совпадений: <span id="threshold-value">90%</span></label>
+                    <input type="range" id="threshold" name="threshold" min="60" max="100" value="90">
+                    <small>Система сигнализирует о необходимости ручной проверки ниже этого значения.</small>
+                </div>
+                <div class="form-group">
+                    <label>Ожидаемые инструменты</label>
+                    <div class="tool-list" id="tool-list">Загрузка каталога...</div>
+                </div>
+                <button type="submit" class="button" id="create-session-btn">Создать сессию</button>
+            </form>
+        </section>
+
+        <section class="card" id="session-info" hidden>
+            <h2>2. Текущая сессия</h2>
+            <dl class="info-grid">
+                <div>
+                    <dt>ID сессии</dt>
+                    <dd id="session-id">—</dd>
+                </div>
+                <div>
+                    <dt>Режим</dt>
+                    <dd id="session-mode">—</dd>
+                </div>
+                <div>
+                    <dt>Ожидается</dt>
+                    <dd id="session-expected">—</dd>
+                </div>
+                <div>
+                    <dt>Порог</dt>
+                    <dd id="session-threshold">—</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="card" id="capture-area" hidden>
+            <h2>3. Захват изображения</h2>
+            <p class="card__hint">Загрузите фото рабочей поверхности. На следующем этапе появится расшифровка.</p>
+            <div class="dropzone" id="dropzone">
+                <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" hidden>
+                <p>Перетащите файл сюда или <button type="button" class="link-button" id="select-file">выберите на устройстве</button></p>
+                <small id="upload-helper">Поддерживаемые форматы: JPEG, PNG, WEBP</small>
+            </div>
+            <div class="preview" id="image-preview" hidden>
+                <img id="preview-img" alt="Загруженное изображение">
+                <button type="button" class="button button--ghost" id="reset-upload">Загрузить другое фото</button>
+            </div>
+        </section>
+
+        <section class="card" id="analysis-area" hidden>
+            <h2>4. Результаты распознавания</h2>
+            <div id="analysis-summary" class="analysis-summary">Нет данных. Загрузите изображение.</div>
+            <div class="result-grid" hidden id="analysis-content">
+                <div>
+                    <h3>Обнаружено</h3>
+                    <table class="table" id="detected-table">
+                        <thead>
+                            <tr><th>Инструмент</th><th>Уверенность</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3>Контроль</h3>
+                    <div class="chip-list">
+                        <div>
+                            <h4>Отсутствуют</h4>
+                            <div id="missing-list" class="chip-container"></div>
+                        </div>
+                        <div>
+                            <h4>Непредвиденные</h4>
+                            <div id="unexpected-list" class="chip-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="page__footer">
+        <p>Прототип LCT: интеграция с компьютерным зрением через REST API. Макет распознавания реализован с заглушкой.</p>
+    </footer>
+</div>
+<script src="/static/app.js" type="module"></script>
+</body>
+</html>
