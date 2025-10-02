@@ -1,0 +1,18 @@
+train: /home/kglin/Desktop/PROJECTS/lcthack2/ml/gemini-labels-v4/yolo-dataset/images/train
+val: /home/kglin/Desktop/PROJECTS/lcthack2/ml/gemini-labels-v4/yolo-dataset/images/train
+# Number of classes
+nc: 11
+
+# Class names
+names:
+  0: 1 Отвертка «-»
+  1: 10 Ключ рожковыйнакидной  ¾
+  2: 11 Бокорезы
+  3: 2 Отвертка «+»
+  4: 3 Отвертка на смещенный крест
+  5: 4 Коловорот
+  6: 5 Пассатижи контровочные
+  7: 6 Пассатижи
+  8: 7 Шэрница
+  9: 8 Разводной ключ
+  10: 9 Открывашка для банок с маслом

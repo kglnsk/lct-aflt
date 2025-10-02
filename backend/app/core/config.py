@@ -20,6 +20,30 @@ class AppConfig(BaseModel):
         default=8.0,
         description="Timeout for detection service requests.",
     )
+    yolo_model_path: Path = Field(
+        default=Path("ml/best.pt"),
+        description="Path to the local YOLO model weights.",
+    )
+    yolo_dataset_config: Path = Field(
+        default=Path("ml/dataset.yaml"),
+        description="Path to the dataset YAML with class labels.",
+    )
+    yolo_confidence_threshold: float = Field(
+        default=0.25,
+        ge=0.0,
+        le=1.0,
+        description="Minimum confidence threshold for YOLO detections.",
+    )
+    yolo_image_size: int = Field(
+        default=720,
+        ge=64,
+        le=2048,
+        description="Image size passed to the YOLO model (imgsz).",
+    )
+    yolo_device: Optional[str] = Field(
+        default=None,
+        description="Computation device for YOLO inference (e.g. 'cpu', 'cuda:0').",
+    )
     upload_dir: Path = Field(
         default=Path("data/uploads"),
         description="Directory where uploaded images are stored.",
@@ -52,6 +76,11 @@ class AppConfig(BaseModel):
             "database_url": os.getenv("DATABASE_URL"),
             "initial_admin_username": os.getenv("INITIAL_ADMIN_USERNAME"),
             "initial_admin_password": os.getenv("INITIAL_ADMIN_PASSWORD"),
+            "yolo_model_path": os.getenv("YOLO_MODEL_PATH"),
+            "yolo_dataset_config": os.getenv("YOLO_DATASET_CONFIG"),
+            "yolo_confidence_threshold": os.getenv("YOLO_CONFIDENCE_THRESHOLD"),
+            "yolo_image_size": os.getenv("YOLO_IMAGE_SIZE"),
+            "yolo_device": os.getenv("YOLO_DEVICE"),
         }
         if raw_upload_dir:
             data["upload_dir"] = Path(raw_upload_dir)

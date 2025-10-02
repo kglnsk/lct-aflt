@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
 from .core.tool_catalog import DEFAULT_TOOLS, TOOL_LOOKUP
 from .models.session import SessionMode, SessionRecord, SessionStatus
 from .services.dashboard_service import DashboardMetrics
+from .services.detection_client import DetectionBackendInfo
 from .db.models import EngineerORM
 
 
@@ -24,6 +25,17 @@ class DetectionItemSchema(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class DetectionResponseSchema(BaseModel):
+    detections: List[DetectionItemSchema]
+
+
+class DetectionMetadataSchema(BaseModel):
+    backend: str
+    configured: bool
+    details: Dict[str, Any] = Field(default_factory=dict)
+    classes: List[str] = Field(default_factory=list)
 
 
 class AnalysisSnapshotSchema(BaseModel):
@@ -213,4 +225,22 @@ def serialize_dashboard_metrics(metrics: DashboardMetrics) -> DashboardMetricsRe
             )
             for session in metrics.latest_sessions
         ],
+    )
+
+
+def serialize_detection_results(detections) -> DetectionResponseSchema:
+    return DetectionResponseSchema(
+        detections=[
+            DetectionItemSchema(tool_id=item.tool_id, label=item.label, confidence=item.confidence)
+            for item in detections
+        ]
+    )
+
+
+def serialize_detection_metadata(info: DetectionBackendInfo) -> DetectionMetadataSchema:
+    return DetectionMetadataSchema(
+        backend=info.backend,
+        configured=info.configured,
+        details=info.details,
+        classes=info.classes,
     )

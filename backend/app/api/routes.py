@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import uuid
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from ..schemas import (
     AnalysisResponse,
+    DetectionMetadataSchema,
+    DetectionResponseSchema,
     DashboardMetricsResponse,
     EngineerCreateRequest,
     EngineerListResponse,
@@ -18,6 +23,8 @@ from ..schemas import (
     ToolCatalogResponse,
     TokenResponse,
     serialize_analysis,
+    serialize_detection_metadata,
+    serialize_detection_results,
     serialize_engineer,
     serialize_engineers,
     serialize_session,
@@ -37,6 +44,7 @@ from ..services.auth_service import (
 )
 from ..db.models import EngineerORM
 from ..db.session import get_db
+from ..core.config import AppConfig, get_config
 
 router = APIRouter()
 
@@ -242,3 +250,56 @@ async def admin_dashboard(
 ) -> DashboardMetricsResponse:
     metrics = service.collect_metrics()
     return serialize_dashboard_metrics(metrics)
+
+
+async def _persist_upload_to_path(upload: UploadFile, target_dir: Path) -> Path:
+    target_dir.mkdir(parents=True, exist_ok=True)
+    suffix = Path(upload.filename or "image.jpg").suffix or ".jpg"
+    file_path = target_dir / f"det-{uuid.uuid4()}{suffix}"
+    data = await upload.read()
+    with file_path.open("wb") as file_obj:
+        file_obj.write(data)
+    await upload.seek(0)
+    return file_path
+
+
+@router.post(
+    "/vision/detect",
+    response_model=DetectionResponseSchema,
+    summary="Run object detection on an uploaded image",
+)
+async def run_detection(
+    file: UploadFile = File(...),
+    engineer: EngineerORM = Depends(get_current_engineer),
+    detection_client: DetectionClient = Depends(get_detection_client),
+    config: AppConfig = Depends(get_config),
+) -> DetectionResponseSchema:
+    supported_types = {"image/jpeg", "image/png", "image/webp"}
+    if file.content_type not in supported_types:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"Unsupported media type '{file.content_type}'.",
+        )
+
+    temp_path = await _persist_upload_to_path(file, config.upload_dir / "ad-hoc")
+    try:
+        detections = await detection_client.detect(temp_path)
+    finally:
+        try:
+            temp_path.unlink(missing_ok=True)
+        except FileNotFoundError:
+            pass
+    return serialize_detection_results(detections)
+
+
+@router.get(
+    "/vision/status",
+    response_model=DetectionMetadataSchema,
+    summary="Inspect detection backend configuration",
+)
+async def detection_status(
+    _: EngineerORM = Depends(get_current_engineer),
+    detection_client: DetectionClient = Depends(get_detection_client),
+) -> DetectionMetadataSchema:
+    info = await detection_client.describe()
+    return serialize_detection_metadata(info)
